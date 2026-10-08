@@ -1,0 +1,36 @@
+name: Check the fix
+
+# Runs on every pull request. It works out which bug you're fixing from
+# your branch name (fix-bug-1 to fix-bug-5) and runs only that bug's tests.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check the fix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test your fix
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          case "$BRANCH" in
+            fix-bug-[1-5]) N="${BRANCH#fix-bug-}" ;;
+            *)
+              echo "::error::Your branch is called '$BRANCH'. It must be called fix-bug-1, fix-bug-2, fix-bug-3, fix-bug-4 or fix-bug-5, to match the bug you're fixing."
+              exit 1 ;;
+          esac
+          echo "Checking your fix for Bug $N..."
+          python -m unittest "tests.test_bug$N" -v
